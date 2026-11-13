@@ -1,0 +1,778 @@
+<title>팀타임</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500&family=IBM+Plex+Sans+KR:wght@400;500;700&display=swap">
+<style>
+/* Layout: one narrow mobile-first column; the weekly timetable grid is the main object on every screen */
+:root {
+  --bg: #f3f5f4;
+  --surface: #ffffff;
+  --ink: #17211f;
+  --muted: #5b6764;
+  --line: #d9e0de;
+  --accent: #12756a;
+  --accent-soft: #e2f1ee;
+  --accent-ink: #ffffff;
+  --warn: #9a5b00;
+  --warn-soft: #fbf0dd;
+  --danger: #b3261e;
+  --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --radius: 10px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #111716; --surface: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+    --accent: #3fb3a3; --accent-soft: #1d3632; --accent-ink: #0d1514;
+    --warn: #e0a54a; --warn-soft: #33281a; --danger: #f2948c;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #111716; --surface: #1a2220; --ink: #e6ecea; --muted: #9aa8a4; --line: #2e3a37;
+  --accent: #3fb3a3; --accent-soft: #1d3632; --accent-ink: #0d1514;
+  --warn: #e0a54a; --warn-soft: #33281a; --danger: #f2948c;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink);
+  font-family: var(--font-body); font-size: 15px; line-height: 1.55; word-break: keep-all; overflow-wrap: anywhere;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 0 48px;
+}
+.wrap { max-width: 560px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+h1, h2, h3 { margin: 0; line-height: 1.3; text-wrap: balance; }
+h1 { font-size: 1.45rem; font-weight: 700; }
+h2 { font-size: 1.05rem; font-weight: 700; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* top bar */
+.topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-block: 16px 4px; }
+.brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 1.05rem; text-decoration: none; color: var(--ink); background: none; border: 0; padding: 0; cursor: pointer; }
+.brand-mark { width: 22px; height: 22px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+.brand-mark span { background: var(--line); border-radius: 2px; }
+.brand-mark span.f { background: var(--accent); }
+.pill { font-size: 0.75rem; letter-spacing: 0.02em; padding: 3px 9px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); white-space: nowrap; }
+.pill.shared { border-color: var(--accent); color: var(--accent); }
+
+.lead { color: var(--muted); }
+.eyebrow { font-size: 0.75rem; letter-spacing: 0.06em; color: var(--muted); font-weight: 500; }
+.meta { color: var(--muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+
+/* blocks */
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.notice { background: var(--warn-soft); color: var(--ink); border-radius: var(--radius); padding: 12px 14px; font-size: 0.9rem; display: flex; flex-direction: column; gap: 8px; }
+.notice strong { color: var(--warn); }
+
+.steps { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.steps li { display: flex; flex-direction: column; gap: 2px; font-size: 0.85rem; color: var(--muted); }
+.steps b { font-family: var(--font-mono); color: var(--accent); font-weight: 500; font-size: 0.8rem; }
+.steps span { color: var(--ink); font-weight: 500; }
+
+/* forms */
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 0.85rem; font-weight: 500; }
+.field .hint { font-size: 0.8rem; color: var(--muted); }
+.row { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; }
+input[type="text"], input[type="date"], select, textarea {
+  width: 100%; min-width: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px;
+}
+textarea { resize: vertical; min-height: 64px; }
+.error { color: var(--danger); font-size: 0.85rem; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 8px; padding: 11px 16px; font-weight: 500; cursor: pointer; border: 1px solid var(--line); background: var(--surface); text-decoration: none; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.ghost { background: transparent; }
+.btn.small { padding: 6px 10px; font-size: 0.85rem; }
+.btn.block { width: 100%; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; font-size: 0.85rem; text-decoration: underline; text-underline-offset: 3px; }
+
+/* meeting header */
+.progress { display: flex; flex-direction: column; gap: 6px; }
+.progress-line { display: flex; justify-content: space-between; font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--accent); transition: width .3s; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 0.82rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); }
+.chip.done { border-color: var(--accent); color: var(--accent); }
+.chip.wait { border-style: dashed; color: var(--muted); }
+button.chip { cursor: pointer; padding: 10px 16px; font-size: 0.95rem; }
+button.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+
+.share { display: flex; gap: 8px; align-items: center; }
+.share code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-mono); font-size: 0.8rem; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+
+.confirmed { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: var(--radius); padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.confirmed .when { font-size: 1.15rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+.tabs { display: grid; grid-template-columns: 1fr 1fr; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); padding: 4px; gap: 4px; }
+.tabs button { border: 0; background: transparent; padding: 9px; border-radius: 7px; cursor: pointer; font-weight: 500; color: var(--muted); }
+.tabs button[aria-selected="true"] { background: var(--accent-soft); color: var(--accent); }
+
+/* timetable grid */
+.grid-wrap { overflow-x: auto; }
+.grid { display: grid; gap: 3px; user-select: none; -webkit-user-select: none; font-variant-numeric: tabular-nums; }
+.gh { text-align: center; font-size: 0.75rem; color: var(--muted); line-height: 1.25; padding-bottom: 2px; }
+.gh b { display: block; font-size: 0.95rem; color: var(--ink); font-weight: 500; }
+.gh.sun b { color: var(--danger); }
+.gt { font-family: var(--font-mono); font-size: 0.7rem; color: var(--muted); text-align: right; padding-right: 4px; transform: translateY(-7px); }
+.cell {
+  height: 32px; min-width: 0; border-radius: 4px; border: 1px solid var(--line); background: var(--surface);
+  padding: 0; cursor: pointer; touch-action: none; font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted);
+}
+.cell.on { background: var(--accent); border-color: var(--accent); }
+.cell.heat { background: color-mix(in oklab, var(--accent) calc(var(--h) * 88%), var(--surface)); border-color: transparent; }
+.cell.heat.hot { color: var(--accent-ink); }
+.cell.heat.full { box-shadow: inset 0 0 0 2px var(--ink); }
+.cell.heat.picked { outline: 2px solid var(--warn); outline-offset: 1px; }
+.cell.readonly { cursor: default; }
+.legend { display: flex; align-items: center; gap: 8px; font-size: 0.78rem; color: var(--muted); flex-wrap: wrap; }
+.legend .ramp { display: inline-flex; gap: 2px; }
+.legend .ramp i { width: 16px; height: 12px; border-radius: 2px; background: color-mix(in oklab, var(--accent) calc(var(--h) * 88%), var(--surface)); border: 1px solid var(--line); }
+.legend .fullkey { width: 16px; height: 12px; border-radius: 2px; box-shadow: inset 0 0 0 2px var(--ink); display: inline-block; }
+
+.status { font-size: 0.85rem; color: var(--muted); min-height: 1.4em; }
+.status.err { color: var(--danger); }
+
+/* candidates */
+.cands { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.cand { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px; border: 1px solid var(--line); border-radius: 8px; }
+.cand.best { border-color: var(--accent); }
+.cand .t { font-weight: 700; font-variant-numeric: tabular-nums; }
+.cand .s { font-size: 0.82rem; color: var(--muted); }
+.cand > div { min-width: 0; }
+.cand .btn { flex-shrink: 0; white-space: nowrap; }
+
+.who { font-size: 0.88rem; display: flex; flex-direction: column; gap: 2px; min-height: 1.5em; }
+.who .no { color: var(--muted); }
+
+.waitlist { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.waitlist li { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+
+.recent { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.recent a { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line); color: var(--ink); text-decoration: none; }
+.recent a:first-child { border-top: 0; }
+.recent small { color: var(--muted); white-space: nowrap; }
+
+.copybox { display: flex; flex-direction: column; gap: 8px; }
+.copybox textarea { font-size: 0.85rem; min-height: 90px; }
+
+footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 0.8rem; color: var(--muted); padding-top: 8px; }
+.meter {
+  position: fixed; right: max(12px, env(safe-area-inset-right, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+  background: var(--ink); color: var(--bg); border-radius: 999px; padding: 6px 8px 6px 14px; font-size: 0.82rem;
+  display: flex; align-items: center; gap: 8px; z-index: 20; font-variant-numeric: tabular-nums;
+}
+.meter button { background: transparent; border: 1px solid currentColor; color: inherit; border-radius: 999px; padding: 2px 8px; font-size: 0.75rem; cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: calc(24px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 0.85rem; z-index: 30; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header class="topbar">
+    <button class="brand" id="brand" type="button" aria-label="팀타임 처음 화면">
+      <span class="brand-mark" aria-hidden="true"><span></span><span class="f"></span><span></span><span class="f"></span><span class="f"></span><span></span><span></span><span class="f"></span><span></span></span>
+      팀타임
+    </button>
+    <span class="pill" id="modePill">연결 중</span>
+  </header>
+  <main id="app" class="wrap" aria-live="polite">
+    <p class="lead">불러오는 중…</p>
+  </main>
+  <footer>
+    <span>팀플 회의 시간을 링크 하나로 정하는 서비스</span>
+    <button class="linkbtn" id="meterToggle" type="button" data-nocount>측정 모드 켜기</button>
+  </footer>
+</div>
+<div class="meter" id="meter" hidden>
+  <span>조작 <b id="meterCount">0</b>회</span>
+  <button type="button" id="meterReset" data-nocount>초기화</button>
+</div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+// 배포한 공유 페이지 주소(팀원에게 보낼 링크의 기본 주소). 다른 곳에 배포하면 비워 두면 됩니다.
+const ARTIFACT_URL = "https://claude.ai/artifact/DJcZo5pch4bniknPVLeoPo";
+
+const DAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const LS_KEY = "teamtime:v1";
+const RECENT_KEY = "teamtime:recent";
+const ME_KEY = "teamtime:me";
+const app = document.getElementById("app");
+
+const state = {
+  store: null, readOnly: false, ready: false,
+  meetingId: null, meeting: null, responses: {}, loaded: false,
+  me: null, tab: "input", unsub: null, loadTimer: null,
+  mySlots: new Set(), dirty: false, painting: false, picked: null,
+  measuring: false, ops: 0,
+};
+
+/* ---------- 작은 도구 ---------- */
+function lsGet(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* 저장 불가 환경 */ } }
+function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function pad(n) { return String(n).padStart(2, "0"); }
+function parseDate(s) { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); }
+function ymd(d) { return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+function dayLabel(s) { const d = parseDate(s); return (d.getMonth() + 1) + "/" + d.getDate() + "(" + DAYS[d.getDay()] + ")"; }
+function hourLabel(h) { return pad(h) + ":00"; }
+function memberKey(i) { return "p" + i; }
+
+let toastTimer = null;
+function toast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 1800);
+}
+async function copyText(text, label) {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast(label || "복사했어요. 단톡방에 붙여 넣으세요.");
+  } catch (e) {
+    showCopyFallback(text);
+  }
+}
+function showCopyFallback(text) {
+  const box = document.getElementById("copyFallback");
+  if (!box) return;
+  box.hidden = false;
+  const ta = box.querySelector("textarea");
+  ta.value = text; ta.focus(); ta.select();
+}
+
+/* ---------- 저장소: 공유 저장(db) 또는 체험 모드(이 기기) ---------- */
+let mem = lsGet(LS_KEY, {});
+const localStore = {
+  mode: "local",
+  subs: new Set(),
+  emit() { for (const f of this.subs) f(); },
+  persist() { lsSet(LS_KEY, mem); this.emit(); },
+  async createMeeting(m) { mem[m.id] = { meeting: m, responses: {} }; this.persist(); },
+  watchMeeting(id, cb) {
+    const run = () => { const e = mem[id]; cb(e ? e.meeting : null, e ? e.responses : {}); };
+    const onStorage = ev => { if (ev.key === LS_KEY) { mem = lsGet(LS_KEY, mem); run(); } };
+    this.subs.add(run); window.addEventListener("storage", onStorage);
+    setTimeout(run, 0);
+    return () => { this.subs.delete(run); window.removeEventListener("storage", onStorage); };
+  },
+  async saveResponse(id, key, data) { if (!mem[id]) throw new Error("missing"); mem[id].responses[key] = data; this.persist(); },
+  async updateMeeting(id, patch) { if (!mem[id]) throw new Error("missing"); Object.assign(mem[id].meeting, patch); this.persist(); },
+};
+
+function dbStore(db) {
+  return {
+    mode: "shared",
+    async createMeeting(m) { await db.doc("meetings/" + m.id).set(m); },
+    watchMeeting(id, cb, onErr) {
+      let meeting, responses = {}, gotM = false;
+      const emit = () => { if (gotM) cb(meeting, responses); };
+      const u1 = db.doc("meetings/" + id).onSnapshot(s => {
+        meeting = s.exists ? JSON.parse(JSON.stringify(s.data())) : null; gotM = true; emit();
+      }, onErr);
+      const u2 = db.collection("meetings/" + id + "/responses").onSnapshot(q => {
+        const next = {}; q.docs.forEach(d => { next[d.id] = JSON.parse(JSON.stringify(d.data())); });
+        responses = next; emit();
+      }, onErr);
+      return () => { u1(); u2(); };
+    },
+    async saveResponse(id, key, data) { await db.doc("meetings/" + id + "/responses/" + key).set(data); },
+    async updateMeeting(id, patch) { await db.doc("meetings/" + id).update(patch); },
+  };
+}
+
+async function initStore() {
+  state.store = localStore;
+  try {
+    if (window.claude && typeof window.claude.use === "function") {
+      const db = await window.claude.use("db");
+      if (db) {
+        state.store = dbStore(db);
+        const user = await window.claude.use("user");
+        let can = null;
+        try { can = user ? await user.can("data.write") : null; } catch (e) { can = null; }
+        if (can === false) state.readOnly = true;
+      }
+    }
+  } catch (e) { state.store = localStore; }
+  state.ready = true;
+  renderModePill();
+}
+function useLocalMode() {
+  state.store = localStore; state.readOnly = false;
+  renderModePill(); location.hash = ""; route();
+}
+function renderModePill() {
+  const p = document.getElementById("modePill");
+  if (state.store.mode === "shared") {
+    p.textContent = state.readOnly ? "보기 전용" : "팀원과 실시간 공유"; p.className = "pill shared";
+  } else {
+    p.textContent = "체험 모드"; p.className = "pill";
+  }
+}
+function shareLink(id) {
+  const base = (state.store.mode === "shared" && ARTIFACT_URL) ? ARTIFACT_URL : location.href.split("#")[0];
+  return base + "#m-" + id;
+}
+
+/* ---------- 최근 회의 / 나 기억하기 (이 브라우저 전용 편의 기능) ---------- */
+function rememberRecent(m) {
+  const list = lsGet(RECENT_KEY, []).filter(r => r.id !== m.id);
+  list.unshift({ id: m.id, title: m.title, mode: state.store.mode, at: Date.now() });
+  lsSet(RECENT_KEY, list.slice(0, 6));
+}
+function getMe(id) { return (lsGet(ME_KEY, {}))[id] || null; }
+function setMe(id, key) { const all = lsGet(ME_KEY, {}); if (key) all[id] = key; else delete all[id]; lsSet(ME_KEY, all); }
+
+/* ---------- 라우팅 ---------- */
+function route() {
+  flushSave();
+  if (state.unsub) { state.unsub(); state.unsub = null; }
+  clearTimeout(state.loadTimer);
+  const h = location.hash.slice(1);
+  if (h.startsWith("m-")) openMeeting(h.slice(2));
+  else renderHome();
+  window.scrollTo(0, 0);
+}
+window.addEventListener("hashchange", route);
+document.getElementById("brand").addEventListener("click", () => { location.hash = ""; route(); });
+
+/* ---------- 처음 화면: 회의 만들기 ---------- */
+function renderHome() {
+  state.meetingId = null;
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const recent = lsGet(RECENT_KEY, []).filter(r => r.mode === state.store.mode);
+  let hourOpts = h0 => { let s = ""; for (let h = 7; h <= 23; h++) s += `<option value="${h}"${h === h0 ? " selected" : ""}>${hourLabel(h)}</option>`; return s; };
+  app.innerHTML = `
+    <section class="wrap" style="gap:10px">
+      <h1>팀플 회의 시간, 단톡방 스크롤 없이 정하기</h1>
+      <p class="lead">링크를 단톡방에 올리면 팀원은 가입 없이 이름을 고르고 가능한 칸만 누릅니다. 겹치는 시간과 아직 답하지 않은 사람이 바로 보입니다.</p>
+    </section>
+    <ol class="steps" aria-label="사용 순서">
+      <li><b>01</b><span>링크 공유</span>회의를 만들고 단톡방에 링크 전송</li>
+      <li><b>02</b><span>칸 누르기</span>팀원이 가능한 시간 선택</li>
+      <li><b>03</b><span>바로 확정</span>겹치는 시간 중 하나로 확정</li>
+    </ol>
+    ${state.readOnly ? readOnlyNotice() : ""}
+    <form class="card" id="createForm" novalidate>
+      <h2>새 회의 만들기</h2>
+      <div class="field">
+        <label for="fTitle">회의 이름</label>
+        <input type="text" id="fTitle" maxlength="40" placeholder="예: UX 팀플 3차 회의">
+      </div>
+      <div class="field">
+        <label for="fMembers">팀원 이름 (나 포함)</label>
+        <textarea id="fMembers" rows="2" placeholder="예: 준성, 민지, 서준, 하은"></textarea>
+        <span class="hint">쉼표나 줄바꿈으로 구분합니다. 2~10명.</span>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label for="fStart">시작 날짜</label>
+          <input type="date" id="fStart" value="${ymd(tomorrow)}">
+        </div>
+        <div class="field">
+          <label for="fDays">기간</label>
+          <select id="fDays"><option value="3">3일</option><option value="5">5일</option><option value="7" selected>7일</option></select>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field"><label for="fFrom">시작 시각</label><select id="fFrom">${hourOpts(9)}</select></div>
+        <div class="field"><label for="fTo">끝 시각</label><select id="fTo">${hourOpts(22)}</select></div>
+      </div>
+      <p class="error" id="formError" hidden></p>
+      <button class="btn primary block" type="submit" ${state.readOnly ? "disabled" : ""}>회의 만들고 링크 받기</button>
+      <button class="btn ghost block" type="button" id="demoBtn" ${state.readOnly ? "disabled" : ""}>예시 회의로 둘러보기</button>
+    </form>
+    <section class="card">
+      <h2>최근에 연 회의</h2>
+      ${recent.length ? `<div class="recent">${recent.map(r => `<a href="#m-${esc(r.id)}"><span>${esc(r.title)}</span><small>${new Date(r.at).toLocaleDateString("ko-KR")}</small></a>`).join("")}</div>`
+        : `<p class="meta">아직 없어요. 회의를 만들거나 받은 링크를 열면 여기에 표시됩니다.</p>`}
+    </section>
+    ${state.store.mode === "local" ? `<p class="meta">지금은 체험 모드입니다. 입력한 내용은 이 기기 브라우저에만 저장되며, 팀원 이름을 바꿔 가며 혼자서 전체 흐름을 시험할 수 있습니다.</p>` : ""}
+  `;
+  document.getElementById("createForm").addEventListener("submit", onCreate);
+  document.getElementById("demoBtn").addEventListener("click", createDemo);
+}
+function readOnlyNotice() {
+  return `<div class="notice"><p><strong>보기 전용 링크입니다.</strong> 이 링크로는 응답을 저장할 수 없어요. 공유한 사람에게 참여 권한을 요청하거나, 체험 모드로 직접 시험해 볼 수 있습니다.</p>
+    <button class="btn small" type="button" onclick="useLocalMode()">체험 모드로 열기</button></div>`;
+}
+
+function buildDates(start, n) { const d0 = parseDate(start); const out = []; for (let i = 0; i < n; i++) { const d = new Date(d0); d.setDate(d0.getDate() + i); out.push(ymd(d)); } return out; }
+
+async function onCreate(e) {
+  e.preventDefault();
+  const err = document.getElementById("formError");
+  const title = document.getElementById("fTitle").value.trim();
+  const members = document.getElementById("fMembers").value.split(/[,\n]/).map(s => s.trim()).filter(Boolean);
+  const start = document.getElementById("fStart").value;
+  const days = Number(document.getElementById("fDays").value);
+  const from = Number(document.getElementById("fFrom").value), to = Number(document.getElementById("fTo").value);
+  let msg = "";
+  if (!title) msg = "회의 이름을 입력해 주세요.";
+  else if (members.length < 2 || members.length > 10) msg = "팀원 이름을 2~10명 입력해 주세요.";
+  else if (new Set(members).size !== members.length) msg = "같은 이름이 두 번 들어 있어요. 구분할 수 있게 바꿔 주세요.";
+  else if (!start) msg = "시작 날짜를 골라 주세요.";
+  else if (to <= from) msg = "끝 시각은 시작 시각보다 늦어야 해요.";
+  if (msg) { err.textContent = msg; err.hidden = false; return; }
+  err.hidden = true;
+  const m = { id: uid(), title, members, dates: buildDates(start, days), startHour: from, endHour: to, createdAt: Date.now(), confirmed: null };
+  await saveNewMeeting(m, e.submitter);
+}
+async function saveNewMeeting(m, btn, after) {
+  if (btn) btn.disabled = true;
+  try {
+    await state.store.createMeeting(m);
+    if (after) await after(m);
+    setMe(m.id, memberKey(0));
+    location.hash = "m-" + m.id;
+  } catch (e) {
+    const err = document.getElementById("formError");
+    err.textContent = "회의를 저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."; err.hidden = false;
+    if (btn) btn.disabled = false;
+  }
+}
+async function createDemo(e) {
+  const tomorrow = new Date(); tomorrow.setDate(tomorrow.getDate() + 1);
+  const dates = buildDates(ymd(tomorrow), 5);
+  const m = { id: uid(), title: "[예시] UX 팀플 3차 회의", members: ["준성", "민지", "서준", "하은"], dates, startHour: 10, endHour: 20, createdAt: Date.now(), confirmed: null };
+  // 예시 응답: 하은(p3)은 일부러 미응답으로 남김
+  const pick = (di, hs) => hs.map(h => dates[di] + "_" + h);
+  const sample = {
+    p1: [...pick(0, [13, 14, 15]), ...pick(2, [14, 15, 16, 17]), ...pick(3, [10, 11])],
+    p2: [...pick(0, [14, 15]), ...pick(2, [15, 16, 17, 18]), ...pick(4, [16, 17])],
+  };
+  await saveNewMeeting(m, e.currentTarget, async mm => {
+    await state.store.saveResponse(mm.id, "p1", { name: "민지", slots: sample.p1, updatedAt: Date.now() });
+    await state.store.saveResponse(mm.id, "p2", { name: "서준", slots: sample.p2, updatedAt: Date.now() });
+  });
+}
+
+/* ---------- 회의 화면 ---------- */
+function openMeeting(id) {
+  state.meetingId = id; state.meeting = null; state.responses = {}; state.loaded = false;
+  state.me = getMe(id); state.tab = state.me ? "input" : "input"; state.picked = null;
+  state.mySlots = new Set(); state.dirty = false;
+  app.innerHTML = `<p class="lead">회의를 불러오는 중…</p>`;
+  state.loadTimer = setTimeout(() => {
+    if (!state.loaded) app.innerHTML = `<div class="notice"><p><strong>회의를 불러오지 못했어요.</strong> 인터넷 연결을 확인한 뒤 링크를 다시 열어 주세요.</p></div>`;
+  }, 10000);
+  state.unsub = state.store.watchMeeting(id, onMeetingData, () => {
+    clearTimeout(state.loadTimer);
+    app.innerHTML = `<div class="notice"><p><strong>회의를 불러오지 못했어요.</strong> 링크가 맞는지 확인하거나 잠시 뒤 다시 열어 주세요.</p></div>`;
+  });
+}
+function onMeetingData(meeting, responses) {
+  const first = !state.loaded;
+  state.loaded = true; clearTimeout(state.loadTimer);
+  state.meeting = meeting; state.responses = responses || {};
+  if (!meeting) {
+    app.innerHTML = `<div class="notice"><p><strong>이 링크의 회의를 찾을 수 없어요.</strong> ${state.store.mode === "local" ? "체험 모드의 회의는 만든 기기에서만 열립니다." : "링크 주소가 정확한지 확인해 주세요."}</p></div>
+      <button class="btn" type="button" onclick="location.hash=''">처음 화면으로</button>`;
+    return;
+  }
+  if (first) rememberRecent(meeting);
+  if (state.me && !state.dirty && !state.painting) {
+    const r = state.responses[state.me];
+    state.mySlots = new Set(r ? r.slots : []);
+  }
+  if (first || !(state.tab === "input" && (state.dirty || state.painting))) renderMeeting();
+  else renderHeader();
+}
+
+function respondedKeys() { return state.meeting.members.map((_, i) => memberKey(i)).filter(k => state.responses[k]); }
+
+function renderMeeting() {
+  const m = state.meeting;
+  app.innerHTML = `
+    ${state.readOnly ? readOnlyNotice() : ""}
+    ${state.store.mode === "local" ? `<div class="notice"><p><strong>체험 모드</strong> · 이 기기에만 저장됩니다. 아래에서 팀원을 바꿔 가며 응답해 보세요.</p></div>` : ""}
+    <section class="wrap" style="gap:12px" id="mhead"></section>
+    <div class="tabs" role="tablist">
+      <button role="tab" type="button" data-tab="input" aria-selected="${state.tab === "input"}">내 시간 입력</button>
+      <button role="tab" type="button" data-tab="result" aria-selected="${state.tab === "result"}">겹치는 시간 보기</button>
+    </div>
+    <section id="tabBody" class="wrap" style="gap:16px"></section>
+    <div class="card copybox" id="copyFallback" hidden>
+      <p class="meta">자동 복사가 막혀 있어요. 아래 문구를 길게 눌러 복사해 주세요.</p>
+      <textarea id="copyArea" readonly aria-label="복사할 문구"></textarea>
+    </div>
+  `;
+  app.querySelectorAll("[data-tab]").forEach(b => b.addEventListener("click", () => { flushSave(); state.tab = b.dataset.tab; state.picked = null; renderMeeting(); }));
+  renderHeader();
+  if (state.tab === "input") renderInput(); else renderResult();
+}
+
+function renderHeader() {
+  const m = state.meeting, el = document.getElementById("mhead");
+  if (!el) return;
+  const n = m.members.length, done = respondedKeys().length;
+  const range = dayLabel(m.dates[0]) + " – " + dayLabel(m.dates[m.dates.length - 1]) + " · " + hourLabel(m.startHour) + "–" + hourLabel(m.endHour);
+  el.innerHTML = `
+    <div style="display:flex;flex-direction:column;gap:4px">
+      <span class="eyebrow">회의 시간 조율</span>
+      <h1>${esc(m.title)}</h1>
+      <p class="meta">${range}</p>
+    </div>
+    ${m.confirmed ? confirmedBlock() : ""}
+    <div class="progress">
+      <div class="progress-line"><span>응답한 팀원</span><b>${done} / ${n}명</b></div>
+      <div class="bar"><i style="width:${(done / n) * 100}%"></i></div>
+      <div class="chips">${m.members.map((name, i) => `<span class="chip ${state.responses[memberKey(i)] ? "done" : "wait"}">${esc(name)}${state.responses[memberKey(i)] ? " ✓" : ""}</span>`).join("")}</div>
+    </div>
+    <div class="share">
+      <code id="shareUrl">${esc(shareLink(m.id))}</code>
+      <button class="btn small" type="button" id="copyLink">링크 복사</button>
+    </div>
+  `;
+  document.getElementById("copyLink").addEventListener("click", () =>
+    copyText(`[팀타임] ${m.title}\n가능한 시간을 눌러 주세요 (가입 필요 없음)\n${shareLink(m.id)}`, "링크를 복사했어요. 단톡방에 붙여 넣으세요."));
+  const ann = document.getElementById("copyAnnounce");
+  if (ann) ann.addEventListener("click", () => copyText(announceText(), "확정 공지를 복사했어요."));
+  const undo = document.getElementById("undoConfirm");
+  if (undo) undo.addEventListener("click", () => setConfirmed(null));
+}
+function confirmedText(c) { return dayLabel(c.date) + " " + hourLabel(c.start) + "–" + hourLabel(c.end); }
+function confirmedBlock() {
+  const c = state.meeting.confirmed;
+  return `<div class="confirmed">
+    <span class="eyebrow">확정된 회의 시간</span>
+    <span class="when">${confirmedText(c)}</span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn primary small" type="button" id="copyAnnounce">단톡방 공지 문구 복사</button>
+      ${state.readOnly ? "" : `<button class="btn small" type="button" id="undoConfirm">확정 취소</button>`}
+    </div>
+  </div>`;
+}
+function announceText() {
+  const m = state.meeting;
+  return `[팀타임] ${m.title}\n회의 시간이 확정됐어요: ${confirmedText(m.confirmed)}\n${shareLink(m.id)}`;
+}
+
+/* 시간표 격자 */
+function gridHTML(kind, avail) {
+  const m = state.meeting, cols = m.dates.length;
+  const total = m.members.length;
+  let html = `<div class="grid" id="grid" style="grid-template-columns: 40px repeat(${cols}, minmax(30px, 1fr))"><span></span>`;
+  for (const d of m.dates) {
+    const dt = parseDate(d);
+    html += `<div class="gh${dt.getDay() === 0 ? " sun" : ""}"><b>${dt.getDate()}</b>${DAYS[dt.getDay()]}</div>`;
+  }
+  for (let h = m.startHour; h < m.endHour; h++) {
+    html += `<div class="gt">${pad(h)}</div>`;
+    for (const d of m.dates) {
+      const k = d + "_" + h;
+      const label = dayLabel(d) + " " + hourLabel(h);
+      if (kind === "input") {
+        const on = state.mySlots.has(k);
+        html += `<button type="button" class="cell${on ? " on" : ""}${state.readOnly ? " readonly" : ""}" data-k="${k}" aria-pressed="${on}" aria-label="${label}"></button>`;
+      } else {
+        const c = (avail[k] || []).length;
+        const ratio = total ? c / total : 0;
+        const cls = c ? ` heat${ratio > 0.55 ? " hot" : ""}${c === total ? " full" : ""}${state.picked === k ? " picked" : ""}` : (state.picked === k ? " picked heat" : "");
+        html += `<button type="button" class="cell${cls}" data-k="${k}" style="--h:${ratio.toFixed(2)}" aria-label="${label}, ${c}명 가능">${c || ""}</button>`;
+      }
+    }
+  }
+  return html + `</div>`;
+}
+
+function renderInput() {
+  const body = document.getElementById("tabBody"), m = state.meeting;
+  if (!state.me || !m.members[Number(state.me.slice(1))]) {
+    state.me = null;
+    body.innerHTML = `<div class="card">
+      <h2>나는 누구인가요?</h2>
+      <p class="meta">가입 없이 이름만 고르면 됩니다.</p>
+      <div class="chips">${m.members.map((name, i) => `<button type="button" class="chip" data-me="${memberKey(i)}" aria-pressed="false">${esc(name)}${state.responses[memberKey(i)] ? " ✓" : ""}</button>`).join("")}</div>
+    </div>`;
+    body.querySelectorAll("[data-me]").forEach(b => b.addEventListener("click", () => {
+      state.me = b.dataset.me; setMe(m.id, state.me);
+      const r = state.responses[state.me]; state.mySlots = new Set(r ? r.slots : []);
+      renderInput();
+    }));
+    return;
+  }
+  const myName = m.members[Number(state.me.slice(1))];
+  body.innerHTML = `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <h2>${esc(myName)}님의 가능한 시간</h2>
+        <button class="linkbtn" type="button" id="changeMe">내가 아니에요</button>
+      </div>
+      <p class="meta">가능한 칸을 누르거나 손가락으로 끌어서 한 번에 선택하세요. 자동으로 저장됩니다.</p>
+      <div class="grid-wrap">${gridHTML("input")}</div>
+      <p class="status" id="saveStatus">${state.responses[state.me] ? `저장됨 · ${state.mySlots.size}칸 선택` : "아직 저장된 응답이 없어요."}</p>
+      <button class="btn primary block" type="button" id="goResult">입력 완료 · 겹치는 시간 보기</button>
+    </div>`;
+  document.getElementById("changeMe").addEventListener("click", () => { flushSave(); state.me = null; setMe(m.id, null); renderInput(); });
+  document.getElementById("goResult").addEventListener("click", () => { flushSave(); state.tab = "result"; renderMeeting(); });
+  if (!state.readOnly) bindPaint(document.getElementById("grid"));
+}
+
+function bindPaint(grid) {
+  let val = true, last = null;
+  const paint = c => {
+    if (!c || c === last) return; last = c;
+    const k = c.dataset.k;
+    if (val) state.mySlots.add(k); else state.mySlots.delete(k);
+    c.classList.toggle("on", val); c.setAttribute("aria-pressed", String(val));
+  };
+  grid.addEventListener("pointerdown", e => {
+    const c = e.target.closest(".cell"); if (!c) return;
+    e.preventDefault();
+    state.painting = true; last = null; val = !state.mySlots.has(c.dataset.k);
+    try { grid.setPointerCapture(e.pointerId); } catch (_) {}
+    paint(c); countOp();
+  });
+  grid.addEventListener("pointermove", e => {
+    if (!state.painting) return;
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const c = el && el.closest ? el.closest(".cell") : null;
+    if (c && grid.contains(c)) paint(c);
+  });
+  const end = () => { if (!state.painting) return; state.painting = false; scheduleSave(); };
+  grid.addEventListener("pointerup", end);
+  grid.addEventListener("pointercancel", end);
+  grid.addEventListener("lostpointercapture", end);
+  // 키보드(Enter/Space)로도 칸을 고를 수 있게
+  grid.addEventListener("click", e => {
+    if (e.detail !== 0) return;
+    const c = e.target.closest(".cell"); if (!c) return;
+    val = !state.mySlots.has(c.dataset.k); last = null; paint(c); countOp(); scheduleSave();
+  });
+}
+
+let saveTimer = null, saveChain = Promise.resolve(), saveSeq = 0;
+function setStatus(t, err) { const s = document.getElementById("saveStatus"); if (s) { s.textContent = t; s.classList.toggle("err", !!err); } }
+function flushSave() { if (saveTimer) { clearTimeout(saveTimer); saveTimer = null; doSave(); } }
+function scheduleSave() {
+  state.dirty = true; setStatus("저장 중…");
+  clearTimeout(saveTimer); saveTimer = setTimeout(() => { saveTimer = null; doSave(); }, 500);
+}
+function doSave() {
+  const m = state.meeting, key = state.me, seq = ++saveSeq;
+  const data = { name: m.members[Number(key.slice(1))], slots: [...state.mySlots].sort(), updatedAt: Date.now() };
+  saveChain = saveChain.then(() => state.store.saveResponse(m.id, key, data)).then(() => {
+    if (seq === saveSeq) { state.dirty = false; setStatus(`저장됨 · ${data.slots.length}칸 선택`); renderHeader(); }
+  }).catch(err => {
+    if (seq === saveSeq) state.dirty = false;
+    if (err && err.code === "invalid_argument") { state.readOnly = true; renderModePill(); setStatus("이 링크에서는 저장할 수 없어요. 공유한 사람에게 참여 권한을 요청해 주세요.", true); }
+    else if (err && err.code === "quota_exceeded") setStatus("저장 공간이 가득 찼어요. 오래된 회의를 정리해야 저장할 수 있어요.", true);
+    else setStatus("저장하지 못했어요. 연결을 확인한 뒤 칸을 한 번 더 눌러 주세요.", true);
+  });
+}
+
+/* 겹치는 시간 계산 */
+function availability() {
+  const avail = {};
+  for (const k of respondedKeys()) for (const s of (state.responses[k].slots || [])) (avail[s] = avail[s] || []).push(k);
+  return avail;
+}
+function candidates(avail) {
+  const m = state.meeting, blocks = [];
+  for (const d of m.dates) {
+    let cur = null;
+    for (let h = m.startHour; h <= m.endHour; h++) {
+      const set = h < m.endHour ? (avail[d + "_" + h] || []).slice().sort().join(",") : "";
+      if (cur && set === cur.set) { cur.end = h + 1; continue; }
+      if (cur && cur.set) blocks.push(cur);
+      cur = set ? { date: d, start: h, end: h + 1, set, who: set.split(",") } : null;
+    }
+  }
+  blocks.sort((a, b) => b.who.length - a.who.length || (b.end - b.start) - (a.end - a.start) || a.date.localeCompare(b.date) || a.start - b.start);
+  return blocks.slice(0, 3);
+}
+function nameOf(k) { return state.meeting.members[Number(k.slice(1))]; }
+
+function renderResult() {
+  const body = document.getElementById("tabBody"), m = state.meeting;
+  const avail = availability(), cands = candidates(avail);
+  const total = m.members.length;
+  const waiting = m.members.map((_, i) => memberKey(i)).filter(k => !state.responses[k]);
+  const candHTML = cands.length ? `<ul class="cands">${cands.map((c, i) => {
+      const missing = m.members.map((_, j) => memberKey(j)).filter(k => !c.who.includes(k));
+      const all = c.who.length === total;
+      const sub = all ? `${total}명 모두 가능` :
+        `${total}명 중 ${c.who.length}명 가능 · ${missing.map(k => esc(nameOf(k)) + (state.responses[k] ? " 불가" : " 미응답")).join(", ")}`;
+      const isConf = m.confirmed && m.confirmed.date === c.date && m.confirmed.start === c.start && m.confirmed.end === c.end;
+      return `<li class="cand${i === 0 ? " best" : ""}"><div><div class="t">${confirmedText(c)}</div><div class="s">${sub}</div></div>
+        ${state.readOnly ? "" : `<button class="btn small${i === 0 ? " primary" : ""}" type="button" data-confirm="${i}" ${isConf ? "disabled" : ""}>${isConf ? "확정됨" : "확정"}</button>`}</li>`;
+    }).join("")}</ul>` : `<p class="meta">아직 응답이 없어요. 팀원이 칸을 누르면 여기에 후보 시간이 나타납니다.</p>`;
+
+  body.innerHTML = `
+    <div class="card">
+      <h2>추천 후보 시간</h2>
+      ${candHTML}
+    </div>
+    ${waiting.length ? `<div class="card">
+      <h2>아직 응답하지 않은 팀원 ${waiting.length}명</h2>
+      <ul class="waitlist">${waiting.map(k => `<li><span>${esc(nameOf(k))}</span><button class="btn small" type="button" data-nudge="${k}">다시 요청 문구 복사</button></li>`).join("")}</ul>
+      ${waiting.length > 1 ? `<button class="btn block" type="button" id="nudgeAll">${waiting.length}명에게 한 번에 요청 문구 복사</button>` : ""}
+    </div>` : `<div class="card"><h2>모든 팀원이 응답했어요</h2><p class="meta">후보 시간 중 하나를 확정하면 단톡방 공지 문구가 만들어집니다.</p></div>`}
+    <div class="card">
+      <h2>시간별로 보기</h2>
+      <div class="legend"><span>가능 인원</span><span class="ramp">${[0.25, 0.5, 0.75, 1].map(v => `<i style="--h:${v}"></i>`).join("")}</span><span>적음 → 많음</span><span class="fullkey"></span><span>전원 가능</span></div>
+      <div class="grid-wrap">${gridHTML("result", avail)}</div>
+      <div class="who" id="who">${state.picked ? whoHTML(state.picked, avail) : `<span class="meta">칸을 누르면 그 시간에 가능한 사람이 보여요.</span>`}</div>
+    </div>`;
+
+  body.querySelectorAll("[data-confirm]").forEach(b => b.addEventListener("click", () => {
+    const c = cands[Number(b.dataset.confirm)]; setConfirmed({ date: c.date, start: c.start, end: c.end });
+  }));
+  body.querySelectorAll("[data-nudge]").forEach(b => b.addEventListener("click", () => copyText(nudgeText([b.dataset.nudge]), "요청 문구를 복사했어요.")));
+  const all = document.getElementById("nudgeAll");
+  if (all) all.addEventListener("click", () => copyText(nudgeText(waiting), "요청 문구를 복사했어요."));
+  document.getElementById("grid").addEventListener("click", e => {
+    const c = e.target.closest(".cell"); if (!c) return;
+    state.picked = c.dataset.k; renderResult();
+  });
+}
+function whoHTML(k, avail) {
+  const [d, h] = k.split("_");
+  const yes = (avail[k] || []).map(nameOf);
+  const no = state.meeting.members.filter((_, i) => !yes.includes(state.meeting.members[i]));
+  return `<b>${dayLabel(d)} ${hourLabel(Number(h))}</b>
+    <span>가능: ${yes.length ? yes.map(esc).join(", ") : "없음"}</span>
+    <span class="no">불가·미응답: ${no.length ? no.map(esc).join(", ") : "없음"}</span>`;
+}
+function nudgeText(keys) {
+  const m = state.meeting;
+  const names = keys.map(nameOf).map(n => n + "님").join(", ");
+  return `[팀타임] ${names}, '${m.title}' 가능한 시간을 아직 입력하지 않으셨어요.\n링크에서 이름을 고르고 가능한 칸만 눌러 주세요 (가입 필요 없음).\n${shareLink(m.id)}`;
+}
+async function setConfirmed(c) {
+  try {
+    await state.store.updateMeeting(state.meeting.id, { confirmed: c });
+    toast(c ? "회의 시간을 확정했어요." : "확정을 취소했어요.");
+  } catch (e) { toast("저장하지 못했어요. 잠시 뒤 다시 시도해 주세요."); }
+}
+
+/* ---------- 측정 모드: 확정까지 조작 횟수 세기 (사용성 테스트용) ---------- */
+function countOp() { if (!state.measuring) return; state.ops++; document.getElementById("meterCount").textContent = state.ops; }
+document.addEventListener("click", e => {
+  const b = e.target.closest("button, a");
+  if (!b || b.closest("[data-nocount]") || b.hasAttribute("data-nocount")) return;
+  if (b.classList.contains("cell") && b.closest("#grid") && e.detail !== 0 && state.tab === "input") return; // 칸은 pointerdown에서 셈
+  countOp();
+}, true);
+document.getElementById("meterToggle").addEventListener("click", e => {
+  state.measuring = !state.measuring; state.ops = 0;
+  document.getElementById("meterCount").textContent = "0";
+  document.getElementById("meter").hidden = !state.measuring;
+  e.currentTarget.textContent = state.measuring ? "측정 모드 끄기" : "측정 모드 켜기";
+});
+document.getElementById("meterReset").addEventListener("click", () => { state.ops = 0; document.getElementById("meterCount").textContent = "0"; });
+
+/* ---------- 시작 ---------- */
+(async function start() {
+  await initStore();
+  route();
+})();
+</script>

@@ -186,7 +186,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wr
     <p class="lead">불러오는 중…</p>
   </main>
   <footer>
-    <span>팀플 회의 시간을 링크 하나로 정하는 서비스</span>
+    <span>팀플 회의 시간을 링크 하나로 정하는 서비스 · <a href="https://github.com/fromyjun1/teamtime" target="_blank" rel="noopener" style="color:inherit">소스 코드</a></span>
     <button class="linkbtn" id="meterToggle" type="button" data-nocount>측정 모드 켜기</button>
   </footer>
 </div>
@@ -531,6 +531,7 @@ function renderHeader() {
       <code id="shareUrl">${esc(shareLink(m.id))}</code>
       <button class="btn small" type="button" id="copyLink">링크 복사</button>
     </div>
+    ${state.store.mode === "local" ? `<p class="meta">체험 모드 링크는 이 기기에서만 열립니다. 팀원과 함께 쓰려면 공유 버전 링크를 사용하세요.</p>` : ""}
   `;
   document.getElementById("copyLink").addEventListener("click", () =>
     copyText(`[팀타임] ${m.title}\n가능한 시간을 눌러 주세요 (가입 필요 없음)\n${shareLink(m.id)}`, "링크를 복사했어요. 단톡방에 붙여 넣으세요."));
@@ -686,8 +687,9 @@ function candidates(avail) {
       cur = set ? { date: d, start: h, end: h + 1, set, who: set.split(",") } : null;
     }
   }
-  blocks.sort((a, b) => b.who.length - a.who.length || (b.end - b.start) - (a.end - a.start) || a.date.localeCompare(b.date) || a.start - b.start);
-  return blocks.slice(0, 3);
+  const useful = blocks.some(b => b.who.length >= 2) ? blocks.filter(b => b.who.length >= 2) : blocks;
+  useful.sort((a, b) => b.who.length - a.who.length || (b.end - b.start) - (a.end - a.start) || a.date.localeCompare(b.date) || a.start - b.start);
+  return useful.slice(0, 3);
 }
 function nameOf(k) { return state.meeting.members[Number(k.slice(1))]; }
 

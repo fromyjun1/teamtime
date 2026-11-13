@@ -3,6 +3,7 @@
 UX/UI 설계 수업 1인 6주 프로젝트 「대학생 팀 프로젝트 회의 시간 조율 개선」의 기획 내용을 Claude Code로 구현한 웹 서비스입니다.
 
 - 배포 링크(팀원 실시간 공유): https://claude.ai/artifact/DJcZo5pch4bniknPVLeoPo
+- 실행 링크(GitHub Pages, 체험 모드): https://fromyjun1.github.io/teamtime/
 - 소스 코드: 이 저장소 (`src/teamtime.html` 원본, `index.html` 배포용)
 - 개발 프롬프트 기록: [PROMPTS.md](PROMPTS.md)
 
